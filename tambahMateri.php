@@ -3,17 +3,16 @@ require 'conn.php'; // Mengimpor file koneksi database
 
 // Menangani request POST
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Validasi input teks
-    if (empty($_POST['judul']) || empty($_POST['sub_judul']) || empty($_POST['deskripsi']) || empty($_POST['pengantar']) || empty($_FILES['filepdf']['name'])) {
+    // Validasi input teks dan kelas_id
+    if (empty($_POST['judul']) || empty($_POST['deskripsi']) || empty($_FILES['filepdf']['name']) || empty($_POST['kelas_id'])) {
         echo json_encode(['status' => 'error', 'message' => 'Data tidak lengkap']);
         exit;
     }
 
     // Sanitasi input teks
     $judul = $conn->real_escape_string($_POST['judul']);
-    $subJudul = $conn->real_escape_string($_POST['sub_judul']);
     $deskripsi = $conn->real_escape_string($_POST['deskripsi']);
-    $pengantar = $conn->real_escape_string($_POST['pengantar']);
+    $kelas_id = $conn->real_escape_string($_POST['kelas_id']);
 
     // Handle file PDF
     $filePdf = $_FILES['filepdf'];
@@ -35,8 +34,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (move_uploaded_file($fileTmpPath, $uploadPath)) {
         try {
             // Insert data ke tabel materi
-            $stmt = $conn->prepare("INSERT INTO materi (judul, sub_judul, deskripsi, pengantar, file_path) VALUES (?, ?, ?, ?, ?)");
-            $stmt->bind_param("sssss", $judul, $subJudul, $deskripsi, $pengantar, $uploadPath);
+            $stmt = $conn->prepare("INSERT INTO materi (judul, deskripsi, file_path, kelas_id) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("sssi", $judul, $deskripsi, $uploadPath, $kelas_id);
             $stmt->execute();
 
             echo json_encode(['status' => 'success', 'message' => 'Materi berhasil ditambahkan']);

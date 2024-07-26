@@ -15,7 +15,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST['password'];
 
     // Prepare SQL statement to prevent SQL injection
-    $stmt = $conn->prepare("SELECT password FROM users WHERE username = ?");
+    $stmt = $conn->prepare("SELECT password, role FROM users WHERE username = ?");
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -24,7 +24,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $user = $result->fetch_assoc();
         // Verify the password with the hashed password in the database
         if (password_verify($password, $user['password'])) {
-            echo json_encode(['status' => 'success', 'message' => 'Login successful']);
+            echo json_encode([
+                'status' => 'success', 
+                'message' => 'Login successful',
+                'role' => $user['role'] 
+            ]);
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Invalid credentials']);
         }
