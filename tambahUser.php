@@ -1,5 +1,6 @@
 <?php
-require 'conn.php';
+require 'conn.php'; 
+
 // Menangani request POST
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty($_POST['username']) || empty($_POST['password']) || empty($_POST['role']) || empty($_POST['nama_lengkap']) || empty($_POST['nip_nis'])) {
@@ -12,14 +13,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $role = $conn->real_escape_string($_POST['role']);
     $namaLengkap = $conn->real_escape_string($_POST['nama_lengkap']);
     $nipNis = $conn->real_escape_string($_POST['nip_nis']);
+    $kelompok = isset($_POST['kelompok']) ? $conn->real_escape_string($_POST['kelompok']) : null;
+
+    // Debugging log
+    error_log("Received data - Username: $username, Role: $role, Nama Lengkap: $namaLengkap, NIP/NIS: $nipNis, Kelompok: $kelompok");
+
+    // Pemeriksaan duplikasi username
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM users WHERE username = ?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $stmt->bind_result($count);
+    $stmt->fetch();
+    $stmt->close();
+
+    if ($count > 0) {
+        echo json_encode(['status' => 'error', 'message' => 'Username sudah digunakan']);
+        $conn->close();
+        exit;
+    }
 
     $conn->begin_transaction();
     try {
-        $stmt = $conn->prepare("INSERT INTO users (username, password, role) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $username, $password, $role);
+        // Menyisipkan data ke dalam tabel users
+        $stmt = $conn->prepare("INSERT INTO users (username, password, role, kelompok) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $username, $password, $role, $kelompok);
         $stmt->execute();
         $userId = $stmt->insert_id;
 
+        // Debugging log
+        error_log("Inserted user - User ID: $userId");
+
+        // Menyisipkan data ke dalam tabel guru atau siswa berdasarkan role
         if ($role == 'guru') {
             $stmt = $conn->prepare("INSERT INTO guru (nip, nama_lengkap, user_id) VALUES (?, ?, ?)");
             $stmt->bind_param("ssi", $nipNis, $namaLengkap, $userId);
@@ -40,4 +64,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 } else {
     echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
 }
+
 ?>

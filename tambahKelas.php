@@ -23,7 +23,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->execute();
 
         if ($stmt->affected_rows > 0) {
-            echo json_encode(['status' => 'success', 'message' => 'Kelas berhasil ditambahkan']);
+            $last_inserted_id = $conn->insert_id;
+            echo json_encode(['status' => 'success', 'message' => 'Kelas berhasil ditambahkan', 'id' => $last_inserted_id ]);
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Gagal menambahkan kelas']);
         }
