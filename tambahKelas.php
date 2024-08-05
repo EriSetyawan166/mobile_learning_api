@@ -6,7 +6,7 @@ header('Content-Type: application/json');
 // Menangani request POST
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Validasi input
-    if (empty($_POST['judul']) || empty($_POST['sub_judul']) || empty($_POST['deskripsi'])) {
+    if (empty($_POST['judul']) || empty($_POST['sub_judul']) || empty($_POST['deskripsi']) || empty($_POST['kelompok'])) {
         echo json_encode(['status' => 'error', 'message' => 'Semua field harus diisi']);
         exit;
     }
@@ -15,11 +15,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $judul = $conn->real_escape_string($_POST['judul']);
     $sub_judul = $conn->real_escape_string($_POST['sub_judul']);
     $deskripsi = $conn->real_escape_string($_POST['deskripsi']);
+    $kelompok = $conn->real_escape_string($_POST['kelompok']);
 
     // Memasukkan data ke dalam database
     try {
-        $stmt = $conn->prepare("INSERT INTO kelas (judul, sub_judul, deskripsi) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $judul, $sub_judul, $deskripsi);
+        $stmt = $conn->prepare("INSERT INTO kelas (judul, sub_judul, deskripsi, kelompok) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $judul, $sub_judul, $deskripsi, $kelompok);
         $stmt->execute();
 
         if ($stmt->affected_rows > 0) {

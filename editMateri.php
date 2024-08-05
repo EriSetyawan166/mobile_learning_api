@@ -17,6 +17,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $deskripsi = $conn->real_escape_string($_POST['deskripsi']);
     $kelas_id = $conn->real_escape_string($_POST['kelas_id']);
 
+    // Retrieve existing file path
+    $existingFilePath = null;
+    $stmt = $conn->prepare("SELECT file_path FROM materi WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $existingFilePath = $row['file_path'];
+    }
+    $stmt->close();
+
     // Optional: Handle file updates
     if (!empty($_FILES['filepdf']['name'])) {
         $filePdf = $_FILES['filepdf'];
@@ -33,15 +45,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             echo json_encode(['status' => 'error', 'message' => 'Failed to upload file']);
             exit;
         }
+
+        // Delete the old file if it exists
+        if ($existingFilePath && file_exists(__DIR__ . '/' . $existingFilePath)) {
+            unlink(__DIR__ . '/' . $existingFilePath);
+        }
     } else {
-        // Assume the existing path remains if no new file is uploaded
-        $uploadPath = $_POST['existing_file_path'] ?? null; // Using null coalescing operator for fallback
+        // Use the existing file path if no new file is uploaded
+        $uploadPath = $existingFilePath;
     }
 
     // Update the database
     $stmt = $conn->prepare("UPDATE materi SET judul=?, deskripsi=?, file_path=?, kelas_id=? WHERE id=?");
     $stmt->bind_param("ssssi", $judul, $deskripsi, $uploadPath, $kelas_id, $id);
-    
+
     if ($stmt->execute()) {
         echo json_encode(['status' => 'success', 'message' => 'Materi berhasil diupdate']);
     } else {

@@ -6,12 +6,17 @@ header('Content-Type: application/json');
 
 // Hanya menerima metode POST
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if (!isset($_POST['user_id']) || empty($_POST['user_id'])) {
+    // Mengambil JSON dari badan permintaan
+    $json = file_get_contents('php://input');
+    $data = json_decode($json, true); // Decode JSON menjadi array asosiatif
+
+    // Memeriksa apakah user_id ada dan tidak kosong
+    if (!isset($data['user_id']) || empty($data['user_id'])) {
         echo json_encode(['status' => 'error', 'message' => 'User ID is required']);
         exit;
     }
 
-    $userId = intval($_POST['user_id']);
+    $userId = intval($data['user_id']);
 
     // Menyiapkan query untuk menghapus user
     $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");

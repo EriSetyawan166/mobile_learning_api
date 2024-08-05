@@ -18,9 +18,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $checkQuery->execute();
     $result = $checkQuery->get_result();
     $file = $result->fetch_assoc();
+    
+    // Jalur lengkap ke file dalam folder 'uploads'
+    $filePath = __DIR__ . '/uploads/' . basename($file['file_path']);
 
-    if ($file && file_exists($file['file_path'])) {
-        unlink($file['file_path']); // Hapus file dari server
+    // Menghapus file dari server jika ada
+    if ($file && file_exists($filePath)) {
+        if (!unlink($filePath)) {
+            echo json_encode(['status' => 'error', 'message' => 'Failed to delete the file associated with the materi']);
+            exit;
+        }
     }
 
     // Menyiapkan query untuk menghapus materi

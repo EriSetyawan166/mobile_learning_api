@@ -3,7 +3,8 @@ require 'conn.php'; // File koneksi ke database
 
 header('Content-Type: application/json');
 
-$query = "SELECT id, judul, sub_judul, deskripsi FROM kelas"; // Query untuk mengambil semua kelas
+// Menambahkan 'kelompok' di dalam SELECT query
+$query = "SELECT id, judul, sub_judul, deskripsi, kelompok FROM kelas"; // Query untuk mengambil semua kelas
 
 $result = $conn->query($query);
 
